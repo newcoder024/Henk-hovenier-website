@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "naam": "Basis tuinonderhoud pakket",
+    "beschrijving": "Voor een nette en verzorgde tuin zonder poespas. Inclusief: Tuinmaaien, Heg snoeien, Planten knippen.",
+    "prijs": 90,
+    "duur": 3.5
+  },
+  {
+    "id": 2,
+    "naam": "Renovatie en schoonmaak pakket",
+    "beschrijving": "Voor een frisse start in uw tuin. Inclusief: Tegels uitgraven, Tuinafval verwijderen, heg snoeien.",
+    "prijs": 120,
+    "duur": 5
+  },
+  {
+    "id": 3,
+    "naam": "Luxe tuin-make-over pakket",
+    "beschrijving": "Voor een complete transformatie van uw tuin. Inclusief: Vijver plaatsen, Tegels uitgraven, Tuinafval verwijderen, Planten knippen.",
+    "prijs": 250,
+    "duur": 9
+  }
+]
