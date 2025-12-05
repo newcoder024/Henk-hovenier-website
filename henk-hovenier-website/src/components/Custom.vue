@@ -5,7 +5,6 @@
     <div class="full">
         <div class="left">
             <h2>Custom offers</h2>
-            <Elements @selected="gekozenElement = $event" />
             
 
             <Calendar v-model="geselecteerdeDatum" :availability="{}" />
