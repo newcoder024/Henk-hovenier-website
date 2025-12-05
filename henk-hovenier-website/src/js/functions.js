@@ -1,4 +1,5 @@
-import pakketData from '../pakket.json';
+import pakketData from '../data/pakket.json';
+import ratesData from '../data/rates.json';
 
 let orders = []; // bestellingen tijdelijk opslaan
 
@@ -35,7 +36,7 @@ export function getOrders() {
   return orders;
 }
 
-// Hulpfunctie voor dagen verdelen
+// hulpfunctie voor dagen verdelen
 export function splitIntoDays(hours) {
   let remaining = hours;
   const result = [];
@@ -44,4 +45,38 @@ export function splitIntoDays(hours) {
     remaining -= 8;
   }
   return result;
+}
+
+export function loadRates(){ // leest tarieven uit rates.json
+  return ratesData;
+}
+
+export function calculateQuote(customInput){ 
+  const rates = loadRates();
+  let total = 0; // totaal prijs begint met 0
+
+  // bereken prijs op basis van wat is ingevoerd. bvb 2 m2 gras * prijs_per_m2_gras 
+  // dat rekent de prijs uit en telt die bij total op
+  if(customInput.grasOppervlakte){
+    total += customInput.grasOppervlakte * rates.prijs_per_m2_gras;
+  }
+  if(customInput.tegelOppervlakte){
+    total += customInput.tegelOppervlakte * rates.prijs_per_m2_tegels;
+  }
+  if(customInput.hegLengte){
+    total += customInput.hegLengte * rates.prijs_per_meter_heg;
+  }
+  if(customInput.extraOpties){
+    customInput.extraOpties.forEach(optie => {
+      const optiePrijs = rates.prijs_extra_opties[optie];
+      if(optiePrijs){
+        total += optiePrijs;
+      }
+    });
+  }
+
+  return {
+    totaalPrijs: total.toFixed(2)
+  };
+  // toFixed(2) zorgt dat er max 2 decimalen worden getoond ipv 5,0003 lol
 }

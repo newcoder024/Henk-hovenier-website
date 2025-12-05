@@ -119,7 +119,12 @@ export default {
 
 .calendar {
   width: 300px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
+  margin: 40px;
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   text-align: center;
 }
 

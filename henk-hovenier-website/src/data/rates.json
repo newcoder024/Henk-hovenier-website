@@ -1,0 +1,10 @@
+{
+  "prijs_per_m2_gras": 2.5,
+  "prijs_per_m2_tegels": 3.0,
+  "prijs_per_meter_heg": 15.0,
+  "prijs_extra_opties": {
+    "afvoer_groenafval": 15.0,
+    "bemesting": 7.50,
+    "onkruidbehandeling": 10.0
+  }
+}
