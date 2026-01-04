@@ -1,11 +1,25 @@
 import pakketData from '../data/pakket.json';
 import ratesData from '../data/rates.json';
 
-let orders = []; // bestellingen tijdelijk opslaan
+// localstorage voor bestellingen onthouden
+let orders = JSON.parse(localStorage.getItem('tuin_orders')) || [];
 
 export function loadPackages() {
   return pakketData; // retourneert JSON array
 }
+
+export function saveOrder(orderData) {
+  const newOrder = {
+    id: Date.now(),
+    datumAangemaakt: new Date().toISOString(),
+    ...orderData
+  };
+  orders.push(newOrder);
+  localStorage.setItem('tuin_orders', JSON.stringify(orders));
+  return newOrder;
+}
+
+
 
 export function createOrder(orderData) {
   const pkg = pakketData.find(p => p.id === orderData.packageId); 

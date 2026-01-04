@@ -1,218 +1,236 @@
 <template>
-    <div class="melding" :class="[{ show: meldingZichtbaar }, meldingType]">
-  {{ meldingTekst }}
-</div>
-    <div class="full">
-        <div class="left">
-            <h2>Custom offers</h2>
-            
-
-            <Calendar v-model="geselecteerdeDatum" :availability="{}" />
+  <p id="Comfirmed"></p>
+<div class="full">
+  <div>
+            <!-- <h2>Custom offers</h2>
+            <Calendar v-model="geselecteerdeDatum" :availability="{}" /> -->
+            <h2>Beschikbare werkzaamheden:</h2>
+            <div v-for="taak in beschikbareTaken" :key="taak.id" class="offerte-item">
+          <div class="taak-info">
+            <p><strong>{{ taak.naam }}</strong></p>
+            <p class="subtext">€{{ taak.prijs.toFixed(2) }} per {{ taak.eenheid }}</p>
+          </div>
+          
+          <button 
+            @click="toggleTaak(taak)" 
+            :class="{ 'btn-remove': isGeselecteerd(taak.id) }"
+          >
+            {{ isGeselecteerd(taak.id) ? 'Verwijder' : 'Toevoegen' }}
+          </button>
 
         </div>
-
-    <div class="full-opdracht">
-        <div class="custom-opdracht">
-            <h2>Custom opdracht</h2>
-
-            <!-- Oppervlaktes en lengtes -->
-            <!-- <div class="form-group">
-                <label>Gras oppervlakte (m²)</label>
-                <input type="number" v-model.number="form.grasOppervlakte" min="0" required/>
-            </div>
-
-            <div class="form-group">
-                <label>Tegel oppervlakte (m²)</label>
-                <input type="number" v-model.number="form.tegelOppervlakte" min="0" required/>
-            </div>
-
-            <div class="form-group">
-                <label>Heg lengte (meter)</label>
-                <input type="number" v-model.number="form.hegLengte" min="0" required/>
-                </div> -->
-
-            <!-- Extra opties -->
-            <h3>Extra opties</h3>
-                <div class="checkbox-group">
-                <label><input type="checkbox" v-model="form.afvoer" required/> Afvoeren groen afval (+ €15.00)</label>
-                <label><input type="checkbox" v-model="form.bemesting" required/> Bemesting (+ €7.50)</label>
-                <label><input type="checkbox" v-model="form.onkruid" required/> Onkruidbehandeling (+ €10.00)</label>
-            </div>
-
-            <button @click="berekenOfferte">Bereken offerte</button>
-
-            <div v-if="resultaat" class="resultaat">
-                <h3>Totaalprijs: € {{ resultaat.totaalPrijs }}</h3>
-            </div>
-            </div>
-
-  <div class="confirm">
-    <h2>Alles naar wens?</h2>
-    <h3>Besvestig uw opdracht:</h3>
-    <p>Datum: {{ geselecteerdeDatum }}</p>
-    <button @click="bevestigOpdracht">Bevestig</button>
-    <button @click="annuleerOpdracht">Annuleer</button>
   </div>
+<div>
+        <div class="confirm">
+          <h3>Je Custom Order</h3>
+          
+          <div v-if="geselecteerdeTaken.length === 0" class="empty-state">
+            Selecteer werkzaamheden om te beginnen.
+          </div>
 
-    </div>
+          <div v-else>
+            <div v-for="item in geselecteerdeTaken" :key="item.id" class="selected-item">
+              <div class="item-header">
+                <span>{{ item.naam }}</span>
+                <button @click="verwijderTaak(item.id)" class="btn-icon">×</button>
+              </div>
+              
+              <div class="item-calc">
+                <label>Aantal {{ item.eenheid }}:</label>
+                <input 
+                  type="number" 
+                  v-model.number="item.hoeveelheid" 
+                  min="1" 
+                  class="qty-input"
+                />
+                <span class="item-total">€{{ (item.hoeveelheid * item.prijs).toFixed(2) }}</span>
+              </div>
+            </div>
 
+            <div class="totaal-sectie">
+              <span>Totaal:</span>
+              <span class="totaal-prijs">€{{ totaalPrijs.toFixed(2) }}</span>
+            </div>
+
+            <button @click="bevestigOpdracht" class="btn-proceed">Verder naar gegevens</button>
+          </div>
+        </div>
+      </div>
     </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { calculateQuote } from "../js/functions.js"; 
-import Calendar from "./Calendar.vue";
+import { ref, computed } from "vue";
+import { loadRates } from '../js/functions.js';
+// moet meer functies laden uit functions.js, zoald voor de localstorage, zorgen dat 
+// de bestellingen worden onthouden en geladen voor de admin, en de gegevens van de klant opslaan
 
-const form = ref({
-  tuinOppervlakte: null,
-  grasOppervlakte: null,
-  tegelOppervlakte: null,
-  hegLengte: null,
-  afvoer: false,
-  bemesting: false,
-  onkruid: false
+// laad tarieven uit rates.json
+const rates = loadRates();
+
+// wat kan de klant kiezen
+const beschikbareTaken = [
+  { id: 'gras', naam: 'Gras maaien', prijs: rates.prijs_per_m2_gras, eenheid: 'm²' },
+  { id: 'tegels', naam: 'Betegelen', prijs: rates.prijs_per_m2_tegels, eenheid: 'm²' },
+  { id: 'heg', naam: 'Heg snoeien', prijs: rates.prijs_per_meter_heg, eenheid: 'meter' },
+];
+// extra taken moeten hier
+
+// wat de klant heeft gekozen als array
+const geselecteerdeTaken = ref([]);
+
+// is de taak al geselecteerd
+const isGeselecteerd = (id) => geselecteerdeTaken.value.some(t => t.id === id);
+
+const toggleTaak = (taak) => {
+  if (isGeselecteerd(taak.id)) {
+    verwijderTaak(taak.id);
+  } else {
+    geselecteerdeTaken.value.push({
+      ...taak,
+      hoeveelheid: 1 // standaard waarde
+    });
+  }
+};
+
+const verwijderTaak = (id) => {
+  geselecteerdeTaken.value = geselecteerdeTaken.value.filter(t => t.id !== id);
+};
+
+// berekening
+const totaalPrijs = computed(() => {
+  return geselecteerdeTaken.value.reduce((sum, item) => {
+    return sum + (item.prijs * item.hoeveelheid);
+  }, 0);
 });
 
-const resultaat = ref(null);
+const bevestigOpdracht = () => {
+  if (totaalPrijs.value === 0) {
+    alert("Selecteer eerst werkzaamheden voordat je verder gaat.");
+    return;
+  }
+  document.getElementById("Comfirmed").innerHTML = "Offerte verzonden! Totaal bedrag: €" + totaalPrijs.value.toFixed(2);
+  // ga naar nieuwe pagina of toon formulier
 
-// bereken offerte op basis van ingevoerde data
-function berekenOfferte() {
-  console.log("Customer input:", form.value);
-
-  const quote = calculateQuote(form.value);
-  resultaat.value = quote;
-}
-
-const geselecteerdeDatum = ref(null); // beginwaarde niks
-
-const meldingZichtbaar = ref(false); //meldingen
-const meldingTekst = ref("");
-const meldingType = ref("");
-
-function bevestigOpdracht() {
-//   alert("Opdracht bevestigd voor " + geselecteerdeDatum.value);
-    if(input === null){
-        return;
-    } else{
-        meldingType.value = "bevestigd";
-        meldingTekst.value = "Uw opdracht is bevestigd voor " + geselecteerdeDatum.value + ".";
-        meldingZichtbaar.value = true;
-
-        // na 3 sec fadeout
-        setTimeout(() => {
-            meldingZichtbaar.value = false;
-        }, 3000);
-    }
-}
-
-function annuleerOpdracht() {
-    if(input === null){
-        return;
-    } else{
-        meldingType.value = "geannuleerd";
-        meldingTekst.value = "Uw opdracht is geannuleerd. Vul het formulier opnieuw in.";
-        meldingZichtbaar.value = true;
-
-  // na 3 sec fade-out
-  setTimeout(() => {
-    meldingZichtbaar.value = false;
-  }, 3000);
-
-  form.value = {
-    tuinOppervlakte: null,
-    grasOppervlakte: null,
-    tegelOppervlakte: null,
-    hegLengte: null,
-    afvoer: false,
-    bemesting: false,
-    onkruid: false
-  };
-  resultaat.value = null;
-  geselecteerdeDatum.value = null;
-
-    }
-}
+};
 </script>
 
 <style scoped>
-.left{
-    background-color: white;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 400px;
+.container {
+  display: flex;
+  gap: 20px;
+  max-width: 1000px;
 }
-.melding{
-    width: 50%;
-    margin: 0 auto;
-    margin-top: 20px;
-    opacity: 0;
-    text-align: center;
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: opacity 0.5s ease-in-out;
-}.melding.show {
-  opacity: 1; /* fade-in */
-}.melding.geannuleerd{
-    background-color: #ffdddd;
-    border: 1px solid #ff5c5c;
-    color: #a70000;
-}.melding.bevestigd {
-  background-color: #ddffdd;
-  border: 1px solid #5cff5c;
-  color: #00a700;
+
+.full {
+  display: flex; 
+  justify-content: center;
+  align-items: flex-start; 
+  gap: 40px;
+  max-width: 95vw;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100%;
 }
-.full{
-    min-height: 100vh;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 40px;
-}
-.confirm {
-  border: 1px solid #ccc; 
-  padding: 20px; 
-  border-radius: 8px;
-  background-color: white;
+.confirm{
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
   width: 400px;
-    margin: 20px auto;
-    text-align: center;
+    background: white;
+
 }
-.custom-opdracht { 
-  border: 1px solid #ccc; 
-  padding: 20px; 
+.offerte-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #eee;
+  margin-bottom: 10px;
   border-radius: 8px;
-  background-color: white;
-  width: 400px;
-  margin: 20px auto;
+  background: white;
 }
 
-.form-group {
-  margin-bottom: 12px;
+.subtext {
+  color: #666;
+  font-size: 0.85rem;
 }
 
-.checkbox-group label {
-  display: block;
-  margin: 4px 0;
+.selected-item {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+  text-align: left;
 }
 
-button {
-  margin-top: 15px;
-  padding: 8px 16px;
-  background: #4caf50;
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.item-calc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.qty-input {
+  width: 60px;
+  padding: 4px;
+}
+
+.totaal-sectie {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 2px solid #4caf50;
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.btn-remove {
+  background-color: #ff5c5c;
+}
+
+.btn-proceed {
+  width: 100%;
+  margin-top: 20px;
+  background-color: #4a7c2c;
+  font-size: 1.1rem;
   color: white;
   border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
   cursor: pointer;
-  border-radius: 4px;
+}.btn-icon:hover {
+  color: #ff5c5c;
+}
+button{
+  cursor: pointer;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
 }
 
-.resultaat {
-  margin-top: 20px;
-  font-size: 1.2rem;
+#Comfirmed{
+  font-size: 1.5rem;
   font-weight: bold;
+  color: #4a7c2c;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.item-total {
+  margin-left: auto;
+  color: #4a7c2c;
 }
 </style>
