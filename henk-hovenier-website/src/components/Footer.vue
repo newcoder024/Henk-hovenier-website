@@ -23,7 +23,7 @@ export default {
 
 <style scoped>
 footer {
-  background-color: #508343;
+  background-color: #2d5016;
   display: flex;
   color: #ffffff;
   text-align: left;

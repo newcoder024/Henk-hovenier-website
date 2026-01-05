@@ -34,15 +34,17 @@
                 <span>{{ item.naam }}</span>
                 <button @click="verwijderTaak(item.id)" class="btn-icon">×</button>
               </div>
+              <p class="subtext">Wij</p>
               
               <div class="item-calc">
-                <label>Aantal {{ item.eenheid }}:</label>
-                <input 
+                <label v-if="item.adjustable">Aantal {{ item.eenheid }}:</label>
+                <input v-if="item.adjustable"
                   type="number" 
                   v-model.number="item.hoeveelheid" 
                   min="1" 
                   class="qty-input"
                 />
+                <span v-else>Eenmalig</span>
                 <span class="item-total">€{{ (item.hoeveelheid * item.prijs).toFixed(2) }}</span>
               </div>
             </div>
@@ -62,19 +64,23 @@
 <script setup>
 import { ref, computed } from "vue";
 import { loadRates } from '../js/functions.js';
+import { useRouter } from 'vue-router';
 // moet meer functies laden uit functions.js, zoald voor de localstorage, zorgen dat 
 // de bestellingen worden onthouden en geladen voor de admin, en de gegevens van de klant opslaan
 
 // laad tarieven uit rates.json
 const rates = loadRates();
+const router = useRouter();
 
 // wat kan de klant kiezen
 const beschikbareTaken = [
-  { id: 'gras', naam: 'Gras maaien', prijs: rates.prijs_per_m2_gras, eenheid: 'm²' },
-  { id: 'tegels', naam: 'Betegelen', prijs: rates.prijs_per_m2_tegels, eenheid: 'm²' },
-  { id: 'heg', naam: 'Heg snoeien', prijs: rates.prijs_per_meter_heg, eenheid: 'meter' },
+  { id: 'gras', naam: 'Gras maaien', prijs: rates.prijs_per_m2_gras, eenheid: 'm²', adjustable: true },
+  { id: 'tegels', naam: 'Betegelen', prijs: rates.prijs_per_m2_tegels, eenheid: 'm²', adjustable: true },
+  { id: 'heg', naam: 'Heg snoeien', prijs: rates.prijs_per_meter_heg, eenheid: 'meter', adjustable: true },
+  { id: 'afvoer groenafval', naam: 'Afvoer groenafval', prijs: rates.prijs_extra_opties.afvoer_groenafval, eenheid: 'keer', adjustable: false },
+  { id: 'bemesting', naam: 'Bemesting', prijs: rates.prijs_extra_opties.bemesting, eenheid: 'keer', adjustable: false },
+  { id: 'onkruidbehandeling', naam: 'Onkruidbehandeling', prijs: rates.prijs_extra_opties.onkruidbehandeling, eenheid: 'keer', adjustable: false },
 ];
-// extra taken moeten hier
 
 // wat de klant heeft gekozen als array
 const geselecteerdeTaken = ref([]);
@@ -109,9 +115,20 @@ const bevestigOpdracht = () => {
     alert("Selecteer eerst werkzaamheden voordat je verder gaat.");
     return;
   }
-  document.getElementById("Comfirmed").innerHTML = "Offerte verzonden! Totaal bedrag: €" + totaalPrijs.value.toFixed(2);
-  // ga naar nieuwe pagina of toon formulier
-
+  // Sla de order data op in localStorage voor Orderform
+  const orderData = {
+    type: 'custom',
+    tasks: geselecteerdeTaken.value.map(item => ({
+      name: item.naam,
+      quantity: item.hoeveelheid,
+      unit: item.eenheid,
+      pricePerUnit: item.prijs,
+      total: item.prijs * item.hoeveelheid
+    })),
+    total: totaalPrijs.value
+  };
+  localStorage.setItem('currentOrder', JSON.stringify(orderData));
+  router.push('/orderform');
 };
 </script>
 
@@ -191,13 +208,13 @@ const bevestigOpdracht = () => {
 }
 
 .btn-remove {
-  background-color: #ff5c5c;
+  background-color: #c82525;
 }
 
 .btn-proceed {
   width: 100%;
   margin-top: 20px;
-  background-color: #4a7c2c;
+  background-color: #4b7c2d;
   font-size: 1.1rem;
   color: white;
   border: none;
@@ -210,11 +227,11 @@ const bevestigOpdracht = () => {
   font-size: 1.2rem;
   cursor: pointer;
 }.btn-icon:hover {
-  color: #ff5c5c;
+  color: #c82525;
 }
 button{
   cursor: pointer;
-  background-color: #4caf50;
+  background-color: #4b7c2d;
   color: white;
   border: none;
   padding: 8px 12px;
@@ -224,13 +241,13 @@ button{
 #Comfirmed{
   font-size: 1.5rem;
   font-weight: bold;
-  color: #4a7c2c;
+  color: #4b7c2d;
   text-align: center;
   margin-top: 20px;
 }
 
 .item-total {
   margin-left: auto;
-  color: #4a7c2c;
+  color: #4b7c2d;
 }
 </style>

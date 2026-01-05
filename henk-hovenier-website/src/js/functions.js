@@ -16,10 +16,9 @@ export function saveOrder(orderData) {
   };
   orders.push(newOrder);
   localStorage.setItem('tuin_orders', JSON.stringify(orders));
+  console.log("Nieuwe bestelling opgeslagen:", JSON.stringify(newOrder, null, 2)); // Als geformatteerde JSON voor debugging
   return newOrder;
 }
-
-
 
 export function createOrder(orderData) {
   const pkg = pakketData.find(p => p.id === orderData.packageId); 
@@ -41,56 +40,13 @@ export function createOrder(orderData) {
     dagenWerk: dagenWerk,
   };
 
-  orders.push(newOrder);
-  console.log("Nieuwe bestelling:", newOrder);
-  return newOrder;
+  return saveOrder(newOrder); // Gebruik saveOrder voor consistentie
 }
 
 export function getOrders() {
   return orders;
 }
 
-// hulpfunctie voor dagen verdelen
-export function splitIntoDays(hours) {
-  let remaining = hours;
-  const result = [];
-  while (remaining > 0) {
-    result.push(Math.min(8, remaining));
-    remaining -= 8;
-  }
-  return result;
-}
-
 export function loadRates(){ // leest tarieven uit rates.json
   return ratesData;
-}
-
-export function calculateQuote(customInput){ 
-  const rates = loadRates();
-  let total = 0; // totaal prijs begint met 0
-
-  // bereken prijs op basis van wat is ingevoerd. bvb 2 m2 gras * prijs_per_m2_gras 
-  // dat rekent de prijs uit en telt die bij total op
-  if(customInput.grasOppervlakte){
-    total += customInput.grasOppervlakte * rates.prijs_per_m2_gras;
-  }
-  if(customInput.tegelOppervlakte){
-    total += customInput.tegelOppervlakte * rates.prijs_per_m2_tegels;
-  }
-  if(customInput.hegLengte){
-    total += customInput.hegLengte * rates.prijs_per_meter_heg;
-  }
-  if(customInput.extraOpties){
-    customInput.extraOpties.forEach(optie => {
-      const optiePrijs = rates.prijs_extra_opties[optie];
-      if(optiePrijs){
-        total += optiePrijs;
-      }
-    });
-  }
-
-  return {
-    totaalPrijs: total.toFixed(2)
-  };
-  // toFixed(2) zorgt dat er max 2 decimalen worden getoond ipv 5,0003 lol
 }

@@ -23,7 +23,7 @@
   justify-content: space-between;
   width: 100vw;
   padding: 20px 40px;
-  background-color: #508343;
+  background-color: #2d5016;
   color: white;
   border-bottom: 1px solid #ddd;
   font-family: 'Poppins', sans-serif;
