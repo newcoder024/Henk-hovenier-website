@@ -34,7 +34,6 @@
                 <span>{{ item.naam }}</span>
                 <button @click="verwijderTaak(item.id)" class="btn-icon">×</button>
               </div>
-              <p class="subtext">Wij</p>
               
               <div class="item-calc">
                 <label v-if="item.adjustable">Aantal {{ item.eenheid }}:</label>

@@ -6,7 +6,7 @@
         <router-link to="/">Home</router-link>
         <router-link to="/bestellingen">Pakketten</router-link>
         <router-link to="/custom">Custom</router-link>
-        <router-link to="/">Admin</router-link>
+        <router-link to="/admin">Admin</router-link>
     </nav>
 
   </header>
